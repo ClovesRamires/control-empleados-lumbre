@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - La Lumbre de Riva</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="header-info">
+                <h1>🔥 La Lumbre de Riva S.L.</h1>
+                <p id="currentDateTime"></p>
+            </div>
+            <div class="user-info">
+                <span id="userWelcome"></span>
+                <button onclick="cerrarSesion()">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="controls-section">
+                <h2>Registrar Evento</h2>
+                <div class="controls-grid">
+                    <button class="control-btn entrada" onclick="registrarEvento('entrada')">
+                        <span class="icon">🚀</span>
+                        <span>Entrada</span>
+                    </button>
+                    <button class="control-btn comida" onclick="registrarEvento('comida')">
+                        <span class="icon">🍽️</span>
+                        <span>Hora de Comida</span>
+                    </button>
+                    <button class="control-btn pausa" onclick="registrarEvento('pausa_fumar')">
+                        <span class="icon">🚬</span>
+                        <span>Pausa para Fumar</span>
+                    </button>
+                    <button class="control-btn cena" onclick="registrarEvento('cena')">
+                        <span class="icon">🌙</span>
+                        <span>Hora de Cena</span>
+                    </button>
+                    <button class="control-btn fin" onclick="registrarEvento('fin_turno')">
+                        <span class="icon">🏁</span>
+                        <span>Fin de Turno</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-section">
+                <h2>Estado Actual de Empleados</h2>
+                <div id="estadoEmpleados" class="status-grid">
+                    <!-- Los estados se cargan dinámicamente -->
+                </div>
+            </div>
+
+            <div class="history-section">
+                <h2>Historial del Día</h2>
+                <div id="historialRegistros" class="history-list">
+                    <!-- El historial se carga dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
