@@ -1,8 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
-const { open } = require('sqlite');
+const Database = require('better-sqlite3');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,69 +14,14 @@ app.use(express.static('frontend'));
 let db;
 
 // Inicializar base de datos
-async function initializeDatabase() {
+function initializeDatabase() {
     try {
-        db = await open({
-            filename: './database.sqlite',
-            driver: sqlite3.Database
-        });
-        console.log('✅ Conectado a SQLite');
+        db = new Database('./database.sqlite');
+        db.pragma('journal_mode = WAL');
+        console.log('✅ Conectado a SQLite con better-sqlite3');
 
         // Crear tablas
-        await db.exec(`
-            CREATE TABLE IF NOT EXISTS empleados (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                documento_identidad TEXT UNIQUE NOT NULL,
-                numero_seguridad_social TEXT UNIQUE NOT NULL,
-                nombre TEXT NOT NULL,
-                apellidos TEXT NOT NULL,
-                pin_acceso TEXT NOT NULL,
-                rol TEXT DEFAULT 'empleado',
-                activo BOOLEAN DEFAULT 1,
-                avatar_color TEXT DEFAULT '#007AFF',
-                departamento_id INTEGER DEFAULT 1,
-                telefono TEXT,
-                email TEXT,
-                direccion TEXT,
-                salario REAL DEFAULT 0,
-                fecha_contratacion DATE,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS departamentos (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nombre TEXT NOT NULL,
-                descripcion TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS registros (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                empleado_id INTEGER NOT NULL,
-                tipo_registro TEXT NOT NULL,
-                fecha_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
-                latitud REAL,
-                longitud REAL,
-                direccion_ip TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (empleado_id) REFERENCES empleados (id)
-            );
-
-            CREATE TABLE IF NOT EXISTS reportes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tipo TEXT NOT NULL,
-                empleado_id INTEGER,
-                fecha_inicio DATE,
-                fecha_fin DATE,
-                parametros TEXT,
-                ruta_archivo TEXT,
-                generado_por INTEGER,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Insertar datos iniciales
-        await insertarDatosIniciales();
+        crearTablas();
         console.log('✅ Base de datos inicializada');
 
     } catch (error) {
@@ -85,34 +29,96 @@ async function initializeDatabase() {
     }
 }
 
-async function insertarDatosIniciales() {
+function crearTablas() {
+    // Tabla de departamentos
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS departamentos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            descripcion TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+    `);
+
+    // Tabla de empleados
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS empleados (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            documento_identidad TEXT UNIQUE NOT NULL,
+            numero_seguridad_social TEXT UNIQUE NOT NULL,
+            nombre TEXT NOT NULL,
+            apellidos TEXT NOT NULL,
+            pin_acceso TEXT NOT NULL,
+            rol TEXT DEFAULT 'empleado',
+            activo BOOLEAN DEFAULT 1,
+            avatar_color TEXT DEFAULT '#007AFF',
+            departamento_id INTEGER DEFAULT 1,
+            telefono TEXT,
+            email TEXT,
+            direccion TEXT,
+            salario REAL DEFAULT 0,
+            fecha_contratacion DATE,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+    `);
+
+    // Tabla de registros
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS registros (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            empleado_id INTEGER NOT NULL,
+            tipo_registro TEXT NOT NULL,
+            fecha_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
+            latitud REAL,
+            longitud REAL,
+            direccion_ip TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (empleado_id) REFERENCES empleados (id)
+        );
+    `);
+
+    // Insertar datos iniciales
+    insertarDatosIniciales();
+}
+
+function insertarDatosIniciales() {
     try {
         // Insertar departamentos
-        await db.run(`
-            INSERT OR IGNORE INTO departamentos (id, nombre, descripcion) VALUES
-            (1, 'Cocina', 'Personal de cocina y preparación'),
-            (2, 'Sala', 'Personal de atención al cliente'),
-            (3, 'Administración', 'Personal administrativo'),
-            (4, 'Limpieza', 'Personal de limpieza y mantenimiento')
+        const insertDepto = db.prepare(`
+            INSERT OR IGNORE INTO departamentos (id, nombre, descripcion) VALUES (?, ?, ?)
         `);
+        
+        insertDepto.run(1, 'Cocina', 'Personal de cocina y preparación');
+        insertDepto.run(2, 'Sala', 'Personal de atención al cliente');
+        insertDepto.run(3, 'Administración', 'Personal administrativo');
+        insertDepto.run(4, 'Limpieza', 'Personal de limpieza y mantenimiento');
 
-        // Insertar empleados admin
-        const adminExists = await db.get("SELECT id FROM empleados WHERE documento_identidad = '12345678A'");
+        // Verificar si ya existe el admin
+        const adminExists = db.prepare(`
+            SELECT id FROM empleados WHERE documento_identidad = ?
+        `).get('12345678A');
+
         if (!adminExists) {
-            await db.run(`
+            // Insertar empleados iniciales
+            const insertEmpleado = db.prepare(`
                 INSERT INTO empleados (
                     documento_identidad, numero_seguridad_social, nombre, apellidos, 
                     pin_acceso, rol, departamento_id, telefono, fecha_contratacion
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `, ['12345678A', 'SS001', 'Juan', 'García López', '1234', 'admin', 3, '+34 612 345 678', '2023-01-15']);
+            `);
 
-            await db.run(`
-                INSERT INTO empleados (
-                    documento_identidad, numero_seguridad_social, nombre, apellidos, 
-                    pin_acceso, departamento_id, telefono, fecha_contratacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            `, ['87654321B', 'SS002', 'María', 'Rodríguez Santos', '5678', 1, '+34 623 456 789', '2023-03-20']);
+            insertEmpleado.run(
+                '12345678A', 'SS001', 'Juan', 'García López', 
+                '1234', 'admin', 3, '+34 612 345 678', '2023-01-15'
+            );
+
+            insertEmpleado.run(
+                '87654321B', 'SS002', 'María', 'Rodríguez Santos', 
+                '5678', 'empleado', 1, '+34 623 456 789', '2023-03-20'
+            );
         }
+
+        console.log('✅ Datos iniciales insertados');
     } catch (error) {
         console.log('ℹ️ Datos iniciales ya existen');
     }
@@ -120,16 +126,17 @@ async function insertarDatosIniciales() {
 
 // ==================== RUTAS DE AUTENTICACIÓN ====================
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', (req, res) => {
     const { pin, documento } = req.body;
     
     try {
-        const empleado = await db.get(
-            `SELECT id, nombre, apellidos, rol, avatar_color 
-             FROM empleados 
-             WHERE documento_identidad = ? AND pin_acceso = ? AND activo = 1`,
-            [documento, pin]
-        );
+        const stmt = db.prepare(`
+            SELECT id, nombre, apellidos, rol, avatar_color 
+            FROM empleados 
+            WHERE documento_identidad = ? AND pin_acceso = ? AND activo = 1
+        `);
+        
+        const empleado = stmt.get(documento, pin);
         
         if (empleado) {
             res.json({
@@ -153,16 +160,16 @@ app.post('/api/login', async (req, res) => {
 
 // ==================== RUTAS DE REGISTROS ====================
 
-app.post('/api/registro', async (req, res) => {
+app.post('/api/registro', (req, res) => {
     const { empleado_id, tipo_registro, latitud, longitud } = req.body;
     
     try {
-        await db.run(
-            `INSERT INTO registros (empleado_id, tipo_registro, latitud, longitud) 
-             VALUES (?, ?, ?, ?)`,
-            [empleado_id, tipo_registro, latitud, longitud]
-        );
+        const stmt = db.prepare(`
+            INSERT INTO registros (empleado_id, tipo_registro, latitud, longitud) 
+            VALUES (?, ?, ?, ?)
+        `);
         
+        stmt.run(empleado_id, tipo_registro, latitud, longitud);
         res.json({ success: true, message: 'Registro guardado correctamente' });
     } catch (error) {
         console.error('Error guardando registro:', error);
@@ -170,9 +177,9 @@ app.post('/api/registro', async (req, res) => {
     }
 });
 
-app.get('/api/estado-empleados', async (req, res) => {
+app.get('/api/estado-empleados', (req, res) => {
     try {
-        const estados = await db.all(`
+        const stmt = db.prepare(`
             SELECT e.id, e.nombre, e.apellidos, e.avatar_color,
                    r.tipo_registro as ultimo_registro,
                    r.fecha_hora as ultima_fecha
@@ -188,6 +195,7 @@ app.get('/api/estado-empleados', async (req, res) => {
             ORDER BY r.fecha_hora DESC
         `);
         
+        const estados = stmt.all();
         res.json(estados);
     } catch (error) {
         console.error('Error obteniendo estados:', error);
@@ -197,15 +205,16 @@ app.get('/api/estado-empleados', async (req, res) => {
 
 // ==================== RUTAS DE ADMINISTRACIÓN ====================
 
-// Obtener todos los empleados
-app.get('/api/admin/empleados', async (req, res) => {
+app.get('/api/admin/empleados', (req, res) => {
     try {
-        const empleados = await db.all(`
+        const stmt = db.prepare(`
             SELECT e.*, d.nombre as departamento_nombre 
             FROM empleados e 
             LEFT JOIN departamentos d ON e.departamento_id = d.id 
             ORDER BY e.nombre
         `);
+        
+        const empleados = stmt.all();
         res.json(empleados);
     } catch (error) {
         console.error('Error obteniendo empleados:', error);
@@ -213,10 +222,10 @@ app.get('/api/admin/empleados', async (req, res) => {
     }
 });
 
-// Obtener departamentos
-app.get('/api/admin/departamentos', async (req, res) => {
+app.get('/api/admin/departamentos', (req, res) => {
     try {
-        const departamentos = await db.all('SELECT * FROM departamentos ORDER BY nombre');
+        const stmt = db.prepare('SELECT * FROM departamentos ORDER BY nombre');
+        const departamentos = stmt.all();
         res.json(departamentos);
     } catch (error) {
         console.error('Error obteniendo departamentos:', error);
@@ -224,8 +233,7 @@ app.get('/api/admin/departamentos', async (req, res) => {
     }
 });
 
-// Crear nuevo empleado
-app.post('/api/admin/empleados', async (req, res) => {
+app.post('/api/admin/empleados', (req, res) => {
     const { 
         documento_identidad, 
         numero_seguridad_social, 
@@ -242,10 +250,10 @@ app.post('/api/admin/empleados', async (req, res) => {
 
     try {
         // Verificar si el documento ya existe
-        const existe = await db.get(
-            'SELECT id FROM empleados WHERE documento_identidad = ?',
-            [documento_identidad]
-        );
+        const checkStmt = db.prepare(`
+            SELECT id FROM empleados WHERE documento_identidad = ?
+        `);
+        const existe = checkStmt.get(documento_identidad);
 
         if (existe) {
             return res.status(400).json({ 
@@ -258,22 +266,23 @@ app.post('/api/admin/empleados', async (req, res) => {
         const nss = numero_seguridad_social || `SS${Date.now().toString().slice(-6)}`;
 
         // Insertar nuevo empleado
-        const result = await db.run(
-            `INSERT INTO empleados (
+        const insertStmt = db.prepare(`
+            INSERT INTO empleados (
                 documento_identidad, numero_seguridad_social, nombre, apellidos,
                 pin_acceso, departamento_id, telefono, email, direccion, salario, fecha_contratacion
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                documento_identidad, nss, nombre, apellidos,
-                pin_acceso, departamento_id || 1, telefono, email, direccion, 
-                salario || 0, fecha_contratacion || new Date().toISOString().split('T')[0]
-            ]
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        const result = insertStmt.run(
+            documento_identidad, nss, nombre, apellidos,
+            pin_acceso, departamento_id || 1, telefono, email, direccion, 
+            salario || 0, fecha_contratacion || new Date().toISOString().split('T')[0]
         );
 
         res.json({ 
             success: true, 
             message: 'Empleado creado correctamente',
-            id: result.lastID
+            id: result.lastInsertRowid
         });
 
     } catch (error) {
@@ -286,7 +295,7 @@ app.post('/api/admin/empleados', async (req, res) => {
 });
 
 // Buscar registros por fechas
-app.get('/api/admin/buscar-registros', async (req, res) => {
+app.get('/api/admin/buscar-registros', (req, res) => {
     const { fecha_inicio, fecha_fin, empleado_id, departamento_id } = req.query;
     
     try {
@@ -322,7 +331,8 @@ app.get('/api/admin/buscar-registros', async (req, res) => {
         
         query += ' ORDER BY r.fecha_hora DESC';
         
-        const registros = await db.all(query, params);
+        const stmt = db.prepare(query);
+        const registros = stmt.all(...params);
         res.json(registros);
         
     } catch (error) {
@@ -332,24 +342,27 @@ app.get('/api/admin/buscar-registros', async (req, res) => {
 });
 
 // Estadísticas para dashboard
-app.get('/api/admin/estadisticas', async (req, res) => {
+app.get('/api/admin/estadisticas', (req, res) => {
     try {
-        const totalEmpleados = await db.get('SELECT COUNT(*) as total FROM empleados WHERE activo = 1');
-        const registrosHoy = await db.get(`
-            SELECT COUNT(*) as total 
-            FROM registros 
-            WHERE date(fecha_hora) = date('now')
-        `);
-        const empleadosActivosHoy = await db.get(`
+        const totalEmpleados = db.prepare(`
+            SELECT COUNT(*) as total FROM empleados WHERE activo = 1
+        `).get();
+        
+        const registrosHoy = db.prepare(`
+            SELECT COUNT(*) as total FROM registros WHERE date(fecha_hora) = date('now')
+        `).get();
+        
+        const empleadosActivosHoy = db.prepare(`
             SELECT COUNT(DISTINCT empleado_id) as total 
             FROM registros 
             WHERE date(fecha_hora) = date('now')
-        `);
-        const registrosMes = await db.get(`
+        `).get();
+        
+        const registrosMes = db.prepare(`
             SELECT COUNT(*) as total 
             FROM registros 
             WHERE strftime('%Y-%m', fecha_hora) = strftime('%Y-%m', 'now')
-        `);
+        `).get();
 
         res.json({
             totalEmpleados: totalEmpleados.total,
@@ -392,12 +405,11 @@ app.get('/health', (req, res) => {
 
 // ==================== INICIAR SERVIDOR ====================
 
-initializeDatabase().then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`);
-        console.log(`🏢 La Lumbre de Riva S.L. - Sistema de Control`);
-        console.log(`🌐 URL: http://localhost:${PORT}`);
-        console.log(`🗄️ Base de datos: SQLite`);
-        console.log(`🔑 Admin: 12345678A / 1234`);
-    });
+initializeDatabase();
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`);
+    console.log(`🏢 La Lumbre de Riva S.L. - Sistema de Control`);
+    console.log(`🌐 URL: http://localhost:${PORT}`);
+    console.log(`🗄️ Base de datos: SQLite (better-sqlite3)`);
+    console.log(`🔑 Admin: 12345678A / 1234`);
 });
