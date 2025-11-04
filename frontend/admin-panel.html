@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administración - La Lumbre de Riva</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin-panel.css">
+</head>
+<body>
+    <div class="admin-panel-container">
+        <header class="admin-header">
+            <h1>🔥 Panel de Administración</h1>
+            <div class="admin-nav">
+                <button onclick="mostrarSeccion('empleados')">👥 Empleados</button>
+                <button onclick="mostrarSeccion('reportes')">📊 Reportes</button>
+                <button onclick="mostrarSeccion('estadisticas')">📈 Estadísticas</button>
+                <button onclick="cerrarSesion()">🚪 Salir</button>
+            </div>
+        </header>
+
+        <!-- Sección Gestión de Empleados -->
+        <section id="seccion-empleados" class="seccion-activa">
+            <div class="seccion-header">
+                <h2>Gestión de Empleados</h2>
+                <button class="btn-primary" onclick="mostrarModalEmpleado()">➕ Nuevo Empleado</button>
+            </div>
+
+            <div class="filtros">
+                <input type="text" id="buscarEmpleado" placeholder="Buscar empleado..." onkeyup="filtrarEmpleados()">
+                <select id="filtroDepartamento" onchange="filtrarEmpleados()">
+                    <option value="">Todos los departamentos</option>
+                </select>
+                <select id="filtroEstado" onchange="filtrarEmpleados()">
+                    <option value="activo">Activos</option>
+                    <option value="inactivo">Inactivos</option>
+                    <option value="todos">Todos</option>
+                </select>
+            </div>
+
+            <div class="tabla-container">
+                <table id="tablaEmpleados">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Documento</th>
+                            <th>Departamento</th>
+                            <th>Teléfono</th>
+                            <th>Fecha Contratación</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTablaEmpleados">
+                        <!-- Los empleados se cargan aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Sección Reportes -->
+        <section id="seccion-reportes" class="seccion-oculta">
+            <div class="seccion-header">
+                <h2>Generar Reportes</h2>
+            </div>
+
+            <div class="reportes-grid">
+                <div class="reporte-card">
+                    <h3>📊 Reporte por Empleado</h3>
+                    <div class="form-group">
+                        <label>Seleccionar Empleado:</label>
+                        <select id="selectEmpleadoReporte">
+                            <option value="">Cargando empleados...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Inicio:</label>
+                        <input type="date" id="fechaInicioEmpleado">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Fin:</label>
+                        <input type="date" id="fechaFinEmpleado">
+                    </div>
+                    <div class="acciones-reporte">
+                        <button class="btn-excel" onclick="generarReporteEmpleado('excel')">📥 Excel</button>
+                        <button class="btn-pdf" onclick="generarReporteEmpleado('pdf')">📄 PDF</button>
+                    </div>
+                </div>
+
+                <div class="reporte-card">
+                    <h3>🏢 Reporte General</h3>
+                    <div class="form-group">
+                        <label>Fecha Inicio:</label>
+                        <input type="date" id="fechaInicioGeneral">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Fin:</label>
+                        <input type="date" id="fechaFinGeneral">
+                    </div>
+                    <div class="form-group">
+                        <label>Departamento:</label>
+                        <select id="selectDeptoReporte">
+                            <option value="">Todos los departamentos</option>
+                        </select>
+                    </div>
+                    <div class="acciones-reporte">
+                        <button class="btn-excel" onclick="generarReporteGeneral('excel')">📥 Excel General</button>
+                        <button class="btn-pdf" onclick="generarReporteGeneral('pdf')">📄 PDF General</button>
+                    </div>
+                </div>
+
+                <div class="reporte-card">
+                    <h3>⏰ Horas Trabajadas</h3>
+                    <div class="form-group">
+                        <label>Mes:</label>
+                        <input type="month" id="mesHoras">
+                    </div>
+                    <div class="acciones-reporte">
+                        <button class="btn-excel" onclick="generarReporteHoras('excel')">📥 Excel Horas</button>
+                        <button class="btn-pdf" onclick="generarReporteHoras('pdf')">📄 PDF Horas</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="historialReportes" class="historial-reportes">
+                <h3>Historial de Reportes Generados</h3>
+                <div id="listaReportes">
+                    <!-- Reportes generados -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Estadísticas -->
+        <section id="seccion-estadisticas" class="seccion-oculta">
+            <div class="seccion-header">
+                <h2>Estadísticas y Dashboard</h2>
+            </div>
+            
+            <div class="estadisticas-grid">
+                <div class="estadistica-card">
+                    <h3>👥 Total Empleados</h3>
+                    <div class="estadistica-valor" id="totalEmpleados">0</div>
+                </div>
+                <div class="estadistica-card">
+                    <h3>✅ Empleados Activos Hoy</h3>
+                    <div class="estadistica-valor" id="empleadosActivosHoy">0</div>
+                </div>
+                <div class="estadistica-card">
+                    <h3>⏱️ Promedio Horas/Día</h3>
+                    <div class="estadistica-valor" id="promedioHoras">0h</div>
+                </div>
+                <div class="estadistica-card">
+                    <h3>📅 Registros Este Mes</h3>
+                    <div class="estadistica-valor" id="registrosMes">0</div>
+                </div>
+            </div>
+
+            <div class="graficos-container">
+                <div class="grafico-card">
+                    <h4>Registros por Departamento (Este Mes)</h4>
+                    <canvas id="graficoDepartamentos"></canvas>
+                </div>
+                <div class="grafico-card">
+                    <h4>Horas Trabajadas por Semana</h4>
+                    <canvas id="graficoHoras"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal para Nuevo/Editar Empleado -->
+    <div id="modalEmpleado" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 id="tituloModalEmpleado">Nuevo Empleado</h3>
+                <span class="close" onclick="cerrarModalEmpleado()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="formEmpleado" onsubmit="guardarEmpleado(event)">
+                    <input type="hidden" id="empleadoId">
+                    
+                    <div class="form-columns">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label>Documento Identidad *</label>
+                                <input type="text" id="documentoIdentidad" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nº Seguridad Social *</label>
+                                <input type="text" id="numeroSeguridadSocial" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nombre *</label>
+                                <input type="text" id="nombreEmpleado" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Apellidos *</label>
+                                <input type="text" id="apellidosEmpleado" required>
+                            </div>
+                            <div class="form-group">
+                                <label>PIN (4 dígitos) *</label>
+                                <input type="password" id="pinEmpleado" maxlength="4" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label>Departamento</label>
+                                <select id="departamentoEmpleado">
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Fecha Contratación</label>
+                                <input type="date" id="fechaContratacion">
+                            </div>
+                            <div class="form-group">
+                                <label>Salario (€)</label>
+                                <input type="number" id="salarioEmpleado" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono</label>
+                                <input type="tel" id="telefonoEmpleado">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="emailEmpleado">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Dirección</label>
+                        <textarea id="direccionEmpleado" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="activoEmpleado" checked>
+                            Empleado Activo
+                        </label>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-primary">💾 Guardar Empleado</button>
+                        <button type="button" class="btn-secondary" onclick="cerrarModalEmpleado()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin-panel.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>

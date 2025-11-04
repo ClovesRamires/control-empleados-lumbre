@@ -1,0 +1,393 @@
+/* Panel de Administración */
+.admin-panel-container {
+    min-height: 100vh;
+    background: #f5f6fa;
+}
+
+.admin-header {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: white;
+    padding: 20px 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.admin-header h1 {
+    margin: 0 0 15px 0;
+    font-size: 1.8rem;
+}
+
+.admin-nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-nav button {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.admin-nav button:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+}
+
+/* Secciones */
+.seccion-oculta {
+    display: none;
+}
+
+.seccion-activa {
+    display: block;
+    padding: 30px;
+}
+
+.seccion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.seccion-header h2 {
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* Filtros */
+.filtros {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.filtros input, .filtros select {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    min-width: 200px;
+}
+
+/* Tablas */
+.tabla-container {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+th {
+    background: #34495e;
+    color: white;
+    font-weight: 600;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+/* Botones de acción */
+.btn-accion {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0 2px;
+    font-size: 0.8rem;
+}
+
+.btn-editar {
+    background: #3498db;
+    color: white;
+}
+
+.btn-eliminar {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-reporte {
+    background: #27ae60;
+    color: white;
+}
+
+/* Reportes */
+.reportes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.reporte-card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.reporte-card h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.acciones-reporte {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-excel {
+    background: #27ae60;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.btn-pdf {
+    background: #e74c3c;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    flex: 1;
+}
+
+/* Estadísticas */
+.estadisticas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.estadistica-card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.estadistica-card h3 {
+    margin-top: 0;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.estadistica-valor {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.graficos-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+}
+
+.grafico-card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Modal mejorado */
+.modal-content.large {
+    max-width: 800px;
+    width: 90%;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.form-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #ecf0f1;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* Historial de reportes */
+.historial-reportes {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.reporte-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.reporte-item:last-child {
+    border-bottom: none;
+}
+
+/* Estados */
+.estado-activo {
+    background: #27ae60;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.estado-inactivo {
+    background: #e74c3c;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .seccion-activa {
+        padding: 15px;
+    }
+    
+    .form-columns {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-nav {
+        flex-direction: column;
+    }
+    
+    .filtros {
+        flex-direction: column;
+    }
+    
+    .filtros input, .filtros select {
+        min-width: auto;
+    }
+    
+    .reportes-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .graficos-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 10px 0;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 10px 0;
+}
