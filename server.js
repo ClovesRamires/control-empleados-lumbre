@@ -18,7 +18,7 @@ function initializeDatabase() {
     try {
         db = new Database('./database.sqlite');
         db.pragma('journal_mode = WAL');
-        console.log('✅ Conectado a SQLite con better-sqlite3');
+        console.log('✅ Conectado a SQLite');
 
         // Crear tablas
         crearTablas();
@@ -200,6 +200,35 @@ app.get('/api/estado-empleados', (req, res) => {
     } catch (error) {
         console.error('Error obteniendo estados:', error);
         res.status(500).json({ error: 'Error obteniendo estados' });
+    }
+});
+
+app.get('/api/historial/:empleado_id?', (req, res) => {
+    const { empleado_id } = req.params;
+    
+    try {
+        let query = `
+            SELECT r.*, e.nombre, e.apellidos 
+            FROM registros r 
+            JOIN empleados e ON r.empleado_id = e.id 
+            WHERE date(r.fecha_hora) = date('now')
+        `;
+        
+        let params = [];
+        
+        if (empleado_id) {
+            query += ' AND r.empleado_id = ?';
+            params.push(empleado_id);
+        }
+        
+        query += ' ORDER BY r.fecha_hora DESC';
+        
+        const stmt = db.prepare(query);
+        const registros = stmt.all(...params);
+        res.json(registros);
+    } catch (error) {
+        console.error('Error obteniendo historial:', error);
+        res.status(500).json({ error: 'Error obteniendo historial' });
     }
 });
 
@@ -410,6 +439,6 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`);
     console.log(`🏢 La Lumbre de Riva S.L. - Sistema de Control`);
     console.log(`🌐 URL: http://localhost:${PORT}`);
-    console.log(`🗄️ Base de datos: SQLite (better-sqlite3)`);
+    console.log(`🗄️ Base de datos: SQLite`);
     console.log(`🔑 Admin: 12345678A / 1234`);
 });
